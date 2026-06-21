@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Smart Supervision Platform</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "on-secondary-fixed": "#22005d",
+          "on-tertiary": "#ffffff",
+          "inverse-on-surface": "#f0f1f2",
+          "on-background": "#191c1d",
+          "secondary-container": "#7531ff",
+          "surface-container-lowest": "#ffffff",
+          "secondary": "#5b00df",
+          "surface-container-high": "#e7e8e9",
+          "surface-container-low": "#f3f4f5",
+          "outline-variant": "#c1c6d6",
+          "on-surface-variant": "#414754",
+          "error-container": "#ffdad6",
+          "primary-fixed-dim": "#adc7ff",
+          "surface-dim": "#d9dadb",
+          "primary-container": "#1a73e8",
+          "secondary-fixed-dim": "#cfbdff",
+          "surface-container-highest": "#e1e3e4",
+          "inverse-surface": "#2e3132",
+          "on-secondary-container": "#eadfff",
+          "surface-container": "#edeeef",
+          "on-primary": "#ffffff",
+          "primary-fixed": "#d8e2ff",
+          "background": "#f8f9fa",
+          "on-secondary": "#ffffff",
+          "surface-bright": "#f8f9fa",
+          "tertiary-container": "#00838f",
+          "surface-tint": "#005bc0",
+          "on-primary-container": "#ffffff",
+          "error": "#ba1a1a",
+          "outline": "#727785",
+          "on-primary-fixed": "#001a41",
+          "surface": "#f8f9fa",
+          "primary": "#005bbf",
+          "tertiary": "#006872",
+          "on-tertiary-container": "#ffffff",
+          "on-error": "#ffffff",
+          "on-primary-fixed-variant": "#004493",
+          "on-surface": "#191c1d",
+          "secondary-fixed": "#e8ddff",
+          "inverse-primary": "#adc7ff",
+          "surface-variant": "#e1e3e4",
+        },
+        borderRadius: {
+          "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"
+        },
+        fontFamily: {
+          "body-lg": ["Sarabun", "Be Vietnam Pro"],
+          "title-lg": ["Sarabun", "Be Vietnam Pro"],
+          "headline-lg": ["Sarabun", "Be Vietnam Pro"],
+        },
+        fontSize: {
+          "body-lg": ["16px", { lineHeight: "24px", letterSpacing: "0.5px", fontWeight: "400" }],
+          "title-lg": ["22px", { lineHeight: "28px", fontWeight: "500" }],
+          "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "600" }],
+          "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "600" }],
+          "body-md": ["14px", { lineHeight: "20px", letterSpacing: "0.25px", fontWeight: "400" }],
+          "label-sm": ["11px", { lineHeight: "16px", letterSpacing: "0.5px", fontWeight: "500" }],
+          "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.1px", fontWeight: "500" }],
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body { font-family: 'Sarabun', 'Be Vietnam Pro', sans-serif; }
+  [data-page] { display: none; }
+  [data-page].active { display: flex; }
+  .sidebar-link { transition: all 0.2s; }
+  .sidebar-link:hover { background: rgba(0,91,191,0.08); }
+  .sidebar-link.active { background: rgba(0,91,191,0.12); color: #005bbf; }
+  .sidebar-link.active .mat-icon { color: #005bbf; }
+  .stat-card { transition: transform 0.2s, box-shadow 0.2s; }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+  .badge { display:inline-flex;align-items:center;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:500; }
+  .badge-green { background:#e6f4ea;color:#1e7e34; }
+  .badge-blue { background:#e8f0fe;color:#1a73e8; }
+  .badge-orange { background:#fef3e2;color:#e65100; }
+  .badge-red { background:#fce8e6;color:#c5221f; }
+  .badge-gray { background:#f1f3f4;color:#5f6368; }
+  .progress-bar { height:6px;border-radius:3px;background:#e0e0e0;overflow:hidden; }
+  .progress-fill { height:100%;border-radius:3px;background:#1a73e8;transition:width 1s ease; }
+  .table-row:hover { background:#f8f9fa; }
+  .tab-btn { padding:10px 20px;border-bottom:2px solid transparent;cursor:pointer;font-weight:500;color:#414754;transition:all 0.2s; }
+  .tab-btn.active { border-bottom-color:#005bbf;color:#005bbf; }
+  .form-input { width:100%;padding:10px 14px;border:1px solid #c1c6d6;border-radius:12px;background:#fff;font-size:14px;outline:none;transition:border 0.2s; }
+  .form-input:focus { border-color:#005bbf;box-shadow:0 0 0 2px rgba(0,91,191,0.1); }
+  .form-select { width:100%;padding:10px 14px;border:1px solid #c1c6d6;border-radius:12px;background:#fff;font-size:14px;outline:none; }
+  .btn-primary { background:#005bbf;color:#fff;padding:10px 24px;border-radius:999px;font-weight:600;cursor:pointer;transition:background 0.2s; }
+  .btn-primary:hover { background:#004493; }
+  .btn-primary:disabled { opacity:0.6;cursor:not-allowed; }
+  .btn-outline { border:1.5px solid #005bbf;color:#005bbf;padding:10px 24px;border-radius:999px;font-weight:600;cursor:pointer;transition:all 0.2s; }
+  .btn-outline:hover { background:rgba(0,91,191,0.08); }
+  .btn-danger { background:#c5221f;color:#fff;padding:10px 24px;border-radius:999px;font-weight:600;cursor:pointer; }
+  .card { background:#fff;border-radius:16px;border:1px solid #e1e3e4;padding:24px; }
+  .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:center;justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal-box { background:#fff;border-radius:20px;padding:32px;max-width:480px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.15);max-height:90vh;overflow-y:auto; }
+  .notification-dot { width:8px;height:8px;background:#c5221f;border-radius:50%;position:absolute;top:6px;right:6px; }
+  .sidebar-mobile { display:none; }
+  @media(max-width:768px) {
+    .sidebar-desktop { display:none !important; }
+    .sidebar-mobile { display:block; }
+    .main-header { padding-left:16px !important; }
+  }
+  .tooltip { position:relative; }
+  .tooltip:hover::after { content:attr(data-tip);position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:#191c1d;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;white-space:nowrap;z-index:10; }
+  .chart-bar { transition:height 0.8s ease; }
+  .spinner { width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:#005bbf;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .fade-in { animation:fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+  .toggle-switch { position:relative;width:44px;height:24px; }
+  .toggle-switch input { opacity:0;width:0;height:0; }
+  .toggle-slider { position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:12px;transition:0.3s; }
+  .toggle-slider:before { content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s; }
+  input:checked + .toggle-slider { background:#005bbf; }
+  input:checked + .toggle-slider:before { transform:translateX(20px); }
+  .loading-overlay { position:fixed;inset:0;background:rgba(255,255,255,0.8);z-index:999;display:flex;align-items:center;justify-content:center; }
+  .loading-spinner { width:48px;height:48px;border:4px solid #e0e0e0;border-top-color:#005bbf;border-radius:50%;animation:spin 0.8s linear infinite; }
+</style>
+</head>
+<body class="bg-background text-on-surface min-h-screen">
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="loading-overlay">
+  <div class="text-center">
+    <div class="loading-spinner mx-auto"></div>
+    <p class="mt-4 text-sm text-on-surface-variant">กำลังเชื่อมต่อ Firebase...</p>
+  </div>
+</div>
+
+<!-- ==================== LOGIN PAGE ==================== -->
+<div id="page-login" data-page class="active min-h-screen items-center justify-center p-4">
+  <main class="w-full max-w-5xl bg-surface-container-lowest rounded-[24px] shadow-sm flex flex-col md:flex-row overflow-hidden border border-outline-variant/30">
+    <section class="hidden md:flex w-1/2 bg-surface-container-low p-12 flex-col justify-between relative overflow-hidden">
+      <div class="absolute top-[-10%] left-[-10%] w-64 h-64 bg-primary-container rounded-full blur-[80px] opacity-20"></div>
+      <div class="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-secondary-container rounded-full blur-[80px] opacity-20"></div>
+      <div class="z-10">
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-sm">
+            <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">school</span>
+          </div>
+          <span class="text-[22px] font-bold text-primary">Smart Supervision</span>
+        </div>
+        <h1 class="text-[32px] font-bold text-on-surface mb-4 leading-tight">ยกระดับคุณภาพ<br/>การศึกษาไทย</h1>
+        <p class="text-body-lg text-on-surface-variant max-w-sm">ระบบนิเวศการศึกษาที่ขับเคลื่อนด้วย AI เพื่อการจัดการโรงเรียนและการนิเทศที่มีประสิทธิภาพยิ่งขึ้น</p>
+        <div class="mt-10 grid grid-cols-2 gap-4">
+          <div class="bg-white/60 rounded-xl p-4 text-center">
+            <div class="text-3xl font-bold text-primary" id="login-stat-schools">-</div>
+            <div class="text-sm text-on-surface-variant mt-1">โรงเรียนในสังกัด</div>
+          </div>
+          <div class="bg-white/60 rounded-xl p-4 text-center">
+            <div class="text-3xl font-bold text-tertiary" id="login-stat-satisfaction">-</div>
+            <div class="text-sm text-on-surface-variant mt-1">ความพึงพอใจ</div>
+          </div>
+          <div class="bg-white/60 rounded-xl p-4 text-center">
+            <div class="text-3xl font-bold text-secondary" id="login-stat-teachers">-</div>
+            <div class="text-sm text-on-surface-variant mt-1">ครูในระบบ</div>
+          </div>
+          <div class="bg-white/60 rounded-xl p-4 text-center">
+            <div class="text-3xl font-bold" style="color:#e65100" id="login-stat-supervisions">-</div>
+            <div class="text-sm text-on-surface-variant mt-1">นิเทศล่าสุด (เดือนนี้)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center bg-surface">
+      <div class="md:hidden flex flex-col items-center mb-10">
+        <div class="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center text-on-primary-container shadow-sm mb-4">
+          <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1">school</span>
+        </div>
+        <span class="text-[22px] font-bold text-primary">Smart Supervision</span>
+      </div>
+      <div class="max-w-md w-full mx-auto">
+        <div class="mb-8">
+          <h2 class="text-[28px] md:text-[32px] font-bold text-on-surface mb-2">ยินดีต้อนรับ</h2>
+          <p class="text-sm text-on-surface-variant">กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ</p>
+        </div>
+        <div id="login-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">error</span>
+          <span>ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</span>
+        </div>
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium text-on-surface mb-2">ชื่อผู้ใช้งาน</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <span class="material-symbols-outlined text-outline">person</span>
+              </div>
+              <input id="login-user" class="block w-full pl-11 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:ring-2 focus:ring-primary focus:border-primary transition-all text-base" placeholder="ป้อนชื่อผู้ใช้งาน" type="text" value="supervisor"/>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-on-surface">รหัสผ่าน</label>
+              <a class="text-sm text-primary hover:underline" href="#" onclick="showModal('modal-forgot');return false;">ลืมรหัสผ่าน?</a>
+            </div>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <span class="material-symbols-outlined text-outline">lock</span>
+              </div>
+              <input id="login-pass" class="block w-full pl-11 pr-11 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl text-on-surface focus:ring-2 focus:ring-primary focus:border-primary transition-all text-base" placeholder="ป้อนรหัสผ่าน" type="password" value="1234"/>
+              <button onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-on-surface">
+                <span id="pass-icon" class="material-symbols-outlined">visibility_off</span>
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="remember-me" class="w-4 h-4 rounded accent-primary"/>
+            <label for="remember-me" class="text-sm text-on-surface-variant">จดจำฉันไว้</label>
+          </div>
+          <button onclick="doLogin()" class="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-full text-on-primary bg-primary hover:bg-on-primary-fixed-variant font-semibold transition-all text-base active:scale-[0.98]">
+            <span id="login-spinner" class="hidden spinner" style="width:18px;height:18px;border-width:2px;border-top-color:#fff;"></span>
+            เข้าสู่ระบบ
+          </button>
+          <div class="relative mt-6">
+            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-outline-variant/50"></div></div>
+            <div class="relative flex justify-center text-sm"><span class="px-2 bg-surface text-on-surface-variant text-xs">หรือติดต่อผู้ดูแลระบบ</span></div>
+          </div>
+          <div class="text-center">
+            <p class="text-xs text-on-surface-variant">📞 02-123-4567 | ✉️ admin@ssp.go.th</p>
+            <p class="text-xs text-on-surface-variant/60 mt-2">Demo: supervisor / 1234 หรือ admin / admin</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ==================== MAIN APP LAYOUT ==================== -->
+<div id="page-app" data-page class="min-h-screen flex flex-col">
+  <!-- Top Nav -->
+  <header class="bg-white border-b border-outline-variant/50 h-14 flex items-center px-4 gap-3 sticky top-0 z-50">
+    <button onclick="toggleSidebar()" class="p-1.5 rounded-lg hover:bg-surface-container text-on-surface-variant md:hidden">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+    <div class="flex items-center gap-2.5 flex-1">
+      <div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container">
+        <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;font-size:18px">school</span>
+      </div>
+      <span class="font-bold text-primary text-[15px] hidden sm:block">Smart Supervision</span>
+    </div>
+    <div class="flex-1 hidden md:block max-w-xs">
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" style="font-size:18px">search</span>
+        <input id="global-search" class="w-full pl-9 pr-4 py-2 bg-surface-container rounded-full text-sm border-0 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="ค้นหาโรงเรียน, ครู..." type="text" oninput="globalSearch(this.value)"/>
+      </div>
+    </div>
+    <div class="flex items-center gap-1">
+      <button onclick="showPage('notifications')" class="relative p-2 rounded-full hover:bg-surface-container text-on-surface-variant" data-tip="แจ้งเตือน">
+        <span class="material-symbols-outlined" style="font-size:22px">notifications</span>
+        <span class="notification-dot" id="notif-dot" style="display:none;"></span>
+      </button>
+      <button onclick="showPage('settings')" class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant">
+        <span class="material-symbols-outlined" style="font-size:22px">settings</span>
+      </button>
+      <button onclick="showModal('modal-profile')" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full hover:bg-surface-container">
+        <div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-sm">ศ</div>
+        <span class="text-sm font-medium hidden sm:block" id="header-name">ศึกษานิเทศก์</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-white border-r border-outline-variant/40 flex flex-col pt-4 pb-6 overflow-y-auto sidebar-desktop fixed md:static inset-y-0 left-0 z-40 mt-14 md:mt-0 transition-transform -translate-x-full md:translate-x-0" style="height:calc(100vh - 56px)">
+      <div class="px-4 mb-4">
+        <div class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider px-3 mb-2">เมนูหลัก</div>
+        <nav class="space-y-0.5">
+          <a onclick="showPage('dashboard');closeSidebar()" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" id="nav-dashboard">
+            <span class="material-symbols-outlined text-primary mat-icon" style="font-variation-settings:'FILL' 1;font-size:22px">dashboard</span>
+            <span class="text-sm font-medium">แดชบอร์ด</span>
+          </a>
+          <a onclick="showPage('schools');closeSidebar()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" id="nav-schools">
+            <span class="material-symbols-outlined text-on-surface-variant mat-icon" style="font-size:22px">school</span>
+            <span class="text-sm font-medium">โรงเรียนในสังกัด</span>
+          </a>
+          <a onclick="showPage('supervision');closeSidebar()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" id="nav-supervision">
+            <span class="material-symbols-outlined text-on-surface-variant mat-icon" style="font-size:22px">assignment</span>
+            <span class="text-sm font-medium">บันทึกการนิเทศ</span>
+            <span class="ml-auto badge badge-blue text-xs px-1.5 py-0" id="pending-count">0</span>
+          </a>
+          <a onclick="showPage('teachers');closeSidebar()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" id="nav-teachers">
+            <span class="material-symbols-outlined text-on-surface-variant mat-icon" style="font-size:22px">group</span>
+            <span class="text-sm font-medium">ข้อมูลครู</span>
+          </a>
+          <a onclick="showPage('plc');closeSidebar()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" id="nav-plc">
+            <span class="material-symbols-outlined text-on-surface-variant mat-icon" style="font-size:22px">groups</span>
+            <span class="text-sm font-medium">PLC / ชุมชนการเรียนรู้</span>
+          </a>
+          <a onclick="showPage('reports');closeSidebar()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" id="nav-reports">
+            <span class="material-symbols-outlined text-on-surface-variant mat-icon" style="font-size:22px">bar_chart</span>
+            <span class="text-sm font-medium">รายงานและสถิติ</span>
+          </a>
+        </nav>
+      </div>
+      <div class="px-4">
+        <div class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider px-3 mb-2">ระบบ</div>
+        <nav class="space-y-0.5">
+          <a onclick="showPage('schedule');closeSidebar()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" id="nav-schedule">
+            <span class="material-symbols-outlined text-on-surface-variant mat-icon" style="font-size:22px">calendar_month</span>
+            <span class="text-sm font-medium">ตารางนิเทศ</span>
+          </a>
+          <a onclick="showPage('notifications');closeSidebar()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" id="nav-notifications">
+            <span class="material-symbols-outlined text-on-surface-variant mat-icon" style="font-size:22px">notifications</span>
+            <span class="text-sm font-medium">การแจ้งเตือน</span>
+            <span class="ml-auto w-2 h-2 rounded-full bg-red-500" id="notif-sidebar-dot" style="display:none;"></span>
+          </a>
+          <a onclick="showPage('settings');closeSidebar()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" id="nav-settings">
+            <span class="material-symbols-outlined text-on-surface-variant mat-icon" style="font-size:22px">settings</span>
+            <span class="text-sm font-medium">ตั้งค่าระบบ</span>
+          </a>
+        </nav>
+      </div>
+      <div class="mt-auto px-4">
+        <div class="bg-surface-container-low rounded-xl p-3 mb-3">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-sm">ศ</div>
+            <div>
+              <div class="text-sm font-medium" id="sidebar-name">นางสาวศุภรัตน์ ใจดี</div>
+              <div class="text-xs text-on-surface-variant" id="sidebar-role">ศึกษานิเทศก์ชำนาญการพิเศษ</div>
+            </div>
+          </div>
+        </div>
+        <button onclick="doLogout()" class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-red-50 text-error text-sm font-medium transition-colors">
+          <span class="material-symbols-outlined" style="font-size:20px">logout</span>
+          ออกจากระบบ
+        </button>
+      </div>
+    </aside>
+    <!-- Sidebar overlay mobile -->
+    <div id="sidebar-overlay" onclick="closeSidebar()" class="hidden fixed inset-0 bg-black/30 z-30 md:hidden"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto" style="height:calc(100vh - 56px)">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section id="sec-dashboard" class="p-6 fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold text-on-surface">แดชบอร์ดภาพรวม</h1>
+            <p class="text-sm text-on-surface-variant mt-0.5">ปีการศึกษา 2567 | ภาคเรียนที่ 1</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="showModal('modal-new-supervision')" class="btn-primary flex items-center gap-2 text-sm">
+              <span class="material-symbols-outlined" style="font-size:18px">add</span>
+              บันทึกการนิเทศ
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="card stat-card">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1">school</span>
+              </div>
+              <span class="badge badge-green text-xs">+3 ใหม่</span>
+            </div>
+            <div class="text-3xl font-bold text-on-surface" id="dash-schools">0</div>
+            <div class="text-sm text-on-surface-variant mt-1">โรงเรียนในสังกัด</div>
+            <div class="progress-bar mt-3"><div class="progress-fill" id="dash-schools-bar" style="width:0%"></div></div>
+          </div>
+          <div class="card stat-card">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
+                <span class="material-symbols-outlined text-secondary" style="font-variation-settings:'FILL' 1">group</span>
+              </div>
+              <span class="badge badge-blue text-xs">ทั้งหมด</span>
+            </div>
+            <div class="text-3xl font-bold text-on-surface" id="dash-teachers">0</div>
+            <div class="text-sm text-on-surface-variant mt-1">ครูในสังกัด</div>
+            <div class="progress-bar mt-3"><div class="progress-fill" id="dash-teachers-bar" style="width:0%;background:#5b00df"></div></div>
+          </div>
+          <div class="card stat-card">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+                <span class="material-symbols-outlined text-tertiary" style="font-variation-settings:'FILL' 1">assignment_turned_in</span>
+              </div>
+              <span class="badge badge-green text-xs">เดือนนี้</span>
+            </div>
+            <div class="text-3xl font-bold text-on-surface" id="dash-supervisions">0</div>
+            <div class="text-sm text-on-surface-variant mt-1">ครั้งการนิเทศ</div>
+            <div class="progress-bar mt-3"><div class="progress-fill" id="dash-supervisions-bar" style="width:0%;background:#006872"></div></div>
+          </div>
+          <div class="card stat-card">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;color:#e65100">star</span>
+              </div>
+              <span class="badge badge-orange text-xs">เฉลี่ย</span>
+            </div>
+            <div class="text-3xl font-bold text-on-surface" id="dash-avg-score">0</div>
+            <div class="text-sm text-on-surface-variant mt-1">คะแนนการนิเทศ</div>
+            <div class="progress-bar mt-3"><div class="progress-fill" id="dash-avg-bar" style="width:0%;background:#e65100"></div></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          <!-- Chart -->
+          <div class="card lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-on-surface">สถิติการนิเทศรายเดือน</h3>
+              <select class="text-sm border border-outline-variant rounded-lg px-3 py-1.5 bg-white">
+                <option>ปีการศึกษา 2567</option>
+              </select>
+            </div>
+            <div class="flex items-end gap-2 h-36" id="monthly-chart">
+              <!-- Generated by JS -->
+            </div>
+          </div>
+
+          <!-- Recent Activities -->
+          <div class="card">
+            <h3 class="font-semibold text-on-surface mb-4">กิจกรรมล่าสุด</h3>
+            <div id="recent-activities" class="space-y-3">
+              <!-- Generated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Schools needing attention -->
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-on-surface">โรงเรียนที่ต้องให้ความสนใจ</h3>
+            <button onclick="showPage('schools')" class="text-sm text-primary hover:underline">ดูทั้งหมด →</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-outline-variant/40">
+                  <th class="text-left py-2 px-3 text-xs font-semibold text-on-surface-variant">โรงเรียน</th>
+                  <th class="text-left py-2 px-3 text-xs font-semibold text-on-surface-variant">นิเทศล่าสุด</th>
+                  <th class="text-left py-2 px-3 text-xs font-semibold text-on-surface-variant">คะแนน</th>
+                  <th class="text-left py-2 px-3 text-xs font-semibold text-on-surface-variant">สถานะ</th>
+                  <th class="py-2 px-3"></th>
+                </tr>
+              </thead>
+              <tbody id="attention-schools">
+                <!-- Generated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SCHOOLS ===== -->
+      <section id="sec-schools" class="p-6 hidden fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold">โรงเรียนในสังกัด</h1>
+            <p class="text-sm text-on-surface-variant mt-0.5" id="schools-subtitle">สพป.ขอนแก่น เขต 1 | 0 โรงเรียน</p>
+          </div>
+          <button onclick="showModal('modal-add-school')" class="btn-primary flex items-center gap-2 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px">add</span>
+            เพิ่มโรงเรียน
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-3 mb-5">
+          <div class="relative flex-1 min-w-48">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" style="font-size:18px">search</span>
+            <input class="form-input pl-9 py-2" placeholder="ค้นหาชื่อโรงเรียน..." type="text" oninput="filterSchools(this.value)"/>
+          </div>
+          <select class="form-select w-auto" onchange="filterSchoolsStatus(this.value)">
+            <option value="">ทุกสถานะ</option>
+            <option value="good">ดีมาก</option>
+            <option value="normal">ปกติ</option>
+            <option value="attention">ต้องดูแล</option>
+          </select>
+          <select class="form-select w-auto" id="school-district-filter" onchange="filterSchoolsDistrict(this.value)">
+            <option value="">ทุกอำเภอ</option>
+          </select>
+        </div>
+
+        <!-- School Cards Grid -->
+        <div id="schools-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+      </section>
+
+      <!-- ===== SUPERVISION ===== -->
+      <section id="sec-supervision" class="p-6 hidden fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold">บันทึกการนิเทศ</h1>
+            <p class="text-sm text-on-surface-variant mt-0.5">ปีการศึกษา 2567</p>
+          </div>
+          <button onclick="showModal('modal-new-supervision')" class="btn-primary flex items-center gap-2 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px">add</span>
+            เพิ่มบันทึก
+          </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-outline-variant/40 mb-5">
+          <button onclick="switchSupervisionTab('all')" class="tab-btn active" id="stab-all">ทั้งหมด (<span id="stab-all-count">0</span>)</button>
+          <button onclick="switchSupervisionTab('pending')" class="tab-btn" id="stab-pending">รอดำเนินการ (<span id="stab-pending-count">0</span>)</button>
+          <button onclick="switchSupervisionTab('done')" class="tab-btn" id="stab-done">เสร็จสิ้น (<span id="stab-done-count">0</span>)</button>
+        </div>
+
+        <div class="space-y-3" id="supervision-list">
+          <!-- Generated by JS -->
+        </div>
+      </section>
+
+      <!-- ===== TEACHERS ===== -->
+      <section id="sec-teachers" class="p-6 hidden fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold">ข้อมูลครู</h1>
+            <p class="text-sm text-on-surface-variant mt-0.5" id="teachers-subtitle">ครูทั้งหมด 0 คน ใน 0 โรงเรียน</p>
+          </div>
+          <button onclick="showModal('modal-add-teacher')" class="btn-primary flex items-center gap-2 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px">person_add</span>
+            เพิ่มครู
+          </button>
+        </div>
+
+        <div class="flex flex-wrap gap-3 mb-5">
+          <div class="relative flex-1 min-w-48">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" style="font-size:18px">search</span>
+            <input class="form-input pl-9 py-2" placeholder="ค้นหาชื่อครู, โรงเรียน..." type="text" oninput="filterTeachers(this.value)"/>
+          </div>
+          <select class="form-select w-auto" id="teacher-subject-filter" onchange="filterTeachersSubject(this.value)">
+            <option value="">ทุกกลุ่มสาระ</option>
+            <option value="ภาษาไทย">ภาษาไทย</option>
+            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+            <option value="วิทยาศาสตร์">วิทยาศาสตร์</option>
+            <option value="สังคมศึกษา">สังคมศึกษา</option>
+            <option value="ภาษาอังกฤษ">ภาษาอังกฤษ</option>
+          </select>
+        </div>
+
+        <div class="card overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-outline-variant/40">
+                <th class="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant">ชื่อ-สกุล</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant">โรงเรียน</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant">กลุ่มสาระ</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant">วิทยฐานะ</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant">สถานะ</th>
+                <th class="py-3 px-4"></th>
+              </tr>
+            </thead>
+            <tbody id="teachers-table">
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== PLC ===== -->
+      <section id="sec-plc" class="p-6 hidden fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold">PLC / ชุมชนการเรียนรู้</h1>
+            <p class="text-sm text-on-surface-variant mt-0.5">Professional Learning Community ตามโมเดล PALS</p>
+          </div>
+          <button onclick="showModal('modal-new-plc')" class="btn-primary flex items-center gap-2 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px">add</span>
+            สร้างกลุ่ม PLC
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="card text-center">
+            <div class="text-3xl font-bold text-primary mb-1" id="plc-total">0</div>
+            <div class="text-sm text-on-surface-variant">กลุ่ม PLC ทั้งหมด</div>
+          </div>
+          <div class="card text-center">
+            <div class="text-3xl font-bold text-secondary mb-1" id="plc-members">0</div>
+            <div class="text-sm text-on-surface-variant">สมาชิกรวม</div>
+          </div>
+          <div class="card text-center">
+            <div class="text-3xl font-bold text-tertiary mb-1" id="plc-sessions">0</div>
+            <div class="text-sm text-on-surface-variant">ครั้งการประชุม</div>
+          </div>
+        </div>
+
+        <!-- PALS Model Steps -->
+        <div class="card mb-6">
+          <h3 class="font-semibold mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1">hub</span>
+            วงจรนิเทศ PALS Model
+          </h3>
+          <div class="flex flex-wrap gap-3">
+            <div class="flex-1 min-w-28 bg-blue-50 rounded-xl p-3 text-center border-2 border-primary">
+              <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm mx-auto mb-2">P</div>
+              <div class="text-xs font-semibold text-primary">Planning</div>
+              <div class="text-xs text-on-surface-variant mt-0.5">วางแผนร่วม</div>
+            </div>
+            <div class="text-on-surface-variant self-center hidden sm:block">→</div>
+            <div class="flex-1 min-w-28 bg-purple-50 rounded-xl p-3 text-center">
+              <div class="w-8 h-8 bg-secondary rounded-full flex items-center justify-center text-white font-bold text-sm mx-auto mb-2">A</div>
+              <div class="text-xs font-semibold text-secondary">Action</div>
+              <div class="text-xs text-on-surface-variant mt-0.5">ลงมือปฏิบัติ</div>
+            </div>
+            <div class="text-on-surface-variant self-center hidden sm:block">→</div>
+            <div class="flex-1 min-w-28 bg-teal-50 rounded-xl p-3 text-center">
+              <div class="w-8 h-8 bg-tertiary rounded-full flex items-center justify-center text-white font-bold text-sm mx-auto mb-2">L</div>
+              <div class="text-xs font-semibold text-tertiary">Learning</div>
+              <div class="text-xs text-on-surface-variant mt-0.5">สะท้อนการเรียนรู้</div>
+            </div>
+            <div class="text-on-surface-variant self-center hidden sm:block">→</div>
+            <div class="flex-1 min-w-28 bg-orange-50 rounded-xl p-3 text-center">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm mx-auto mb-2" style="background:#e65100">S</div>
+              <div class="text-xs font-semibold" style="color:#e65100">Sharing</div>
+              <div class="text-xs text-on-surface-variant mt-0.5">แบ่งปันความรู้</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="plc-list">
+        </div>
+      </section>
+
+      <!-- ===== REPORTS ===== -->
+      <section id="sec-reports" class="p-6 hidden fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold">รายงานและสถิติ</h1>
+            <p class="text-sm text-on-surface-variant mt-0.5">สรุปผลการนิเทศ ปีการศึกษา 2567</p>
+          </div>
+          <button onclick="generateReport()" class="btn-outline flex items-center gap-2 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px">download</span>
+            ส่งออก PDF
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="card">
+            <h3 class="font-semibold mb-4">คะแนนเฉลี่ยรายกลุ่มสาระ</h3>
+            <div id="subject-scores" class="space-y-3">
+              <!-- Generated by JS -->
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="font-semibold mb-4">สัดส่วนผลการนิเทศ</h3>
+            <div id="score-distribution" class="space-y-3">
+              <!-- Generated by JS -->
+            </div>
+            <!-- Simple Donut Visual -->
+            <div class="mt-4 flex items-center justify-center">
+              <svg viewBox="0 0 100 100" class="w-32 h-32">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#e0e0e0" stroke-width="12"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#1a73e8" stroke-width="12" stroke-dasharray="0 250" stroke-dashoffset="0" transform="rotate(-90 50 50)" id="donut-blue"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#5b00df" stroke-width="12" stroke-dasharray="0 250" stroke-dashoffset="0" transform="rotate(-90 50 50)" id="donut-purple"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#f59e0b" stroke-width="12" stroke-dasharray="0 250" stroke-dashoffset="0" transform="rotate(-90 50 50)" id="donut-yellow"/>
+                <text x="50" y="55" text-anchor="middle" font-size="14" font-weight="bold" fill="#005bbf" id="donut-score">0</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold">รายงานการนิเทศล่าสุด</h3>
+            <button onclick="showToast('กำลังโหลดรายงาน...')" class="text-sm text-primary hover:underline">ดูทั้งหมด</button>
+          </div>
+          <div id="recent-reports" class="space-y-3">
+            <!-- Generated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SCHEDULE ===== -->
+      <section id="sec-schedule" class="p-6 hidden fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold">ตารางนิเทศ</h1>
+            <p class="text-sm text-on-surface-variant mt-0.5" id="schedule-month">มิถุนายน 2567</p>
+          </div>
+          <button onclick="showModal('modal-new-supervision')" class="btn-primary flex items-center gap-2 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px">event_note</span>
+            นัดหมายใหม่
+          </button>
+        </div>
+
+        <div class="card mb-4">
+          <div class="grid grid-cols-7 gap-1 text-center mb-2">
+            <div class="text-xs font-semibold text-on-surface-variant py-2">อา.</div>
+            <div class="text-xs font-semibold text-on-surface-variant py-2">จ.</div>
+            <div class="text-xs font-semibold text-on-surface-variant py-2">อ.</div>
+            <div class="text-xs font-semibold text-on-surface-variant py-2">พ.</div>
+            <div class="text-xs font-semibold text-on-surface-variant py-2">พฤ.</div>
+            <div class="text-xs font-semibold text-on-surface-variant py-2">ศ.</div>
+            <div class="text-xs font-semibold text-on-surface-variant py-2">ส.</div>
+          </div>
+          <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
+        </div>
+
+        <div class="space-y-3">
+          <h3 class="font-semibold">กำหนดการนิเทศที่กำลังจะถึง</h3>
+          <div id="upcoming-events">
+            <!-- Generated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== NOTIFICATIONS ===== -->
+      <section id="sec-notifications" class="p-6 hidden fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold">การแจ้งเตือน</h1>
+          </div>
+          <button onclick="markAllRead()" class="text-sm text-primary hover:underline">ทำเครื่องหมายทั้งหมดว่าอ่านแล้ว</button>
+        </div>
+        <div class="space-y-3" id="notifications-list">
+        </div>
+      </section>
+
+      <!-- ===== SETTINGS ===== -->
+      <section id="sec-settings" class="p-6 hidden fade-in">
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold">ตั้งค่าระบบ</h1>
+          <p class="text-sm text-on-surface-variant mt-0.5">จัดการข้อมูลส่วนตัวและการตั้งค่า</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-1">
+            <div class="card text-center">
+              <div class="w-20 h-20 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-2xl mx-auto mb-3">ศ</div>
+              <div class="font-semibold text-lg" id="settings-name">นางสาวศุภรัตน์ ใจดี</div>
+              <div class="text-sm text-on-surface-variant mt-1" id="settings-role">ศึกษานิเทศก์ชำนาญการพิเศษ</div>
+              <div class="text-sm text-on-surface-variant">สพป.ขอนแก่น เขต 1</div>
+              <button onclick="showToast('อัปโหลดรูปภาพ...')" class="mt-4 btn-outline text-sm">เปลี่ยนรูปภาพ</button>
+            </div>
+          </div>
+
+          <div class="lg:col-span-2 space-y-4">
+            <div class="card">
+              <h3 class="font-semibold mb-4">ข้อมูลส่วนตัว</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1.5">ชื่อ-สกุล</label>
+                  <input class="form-input" id="settings-fullname" value="นางสาวศุภรัตน์ ใจดี" type="text"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1.5">ตำแหน่ง</label>
+                  <input class="form-input" id="settings-position" value="ศึกษานิเทศก์ชำนาญการพิเศษ" type="text"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1.5">อีเมล</label>
+                  <input class="form-input" id="settings-email" value="suparat@ssp.go.th" type="email"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1.5">เบอร์โทร</label>
+                  <input class="form-input" id="settings-phone" value="081-234-5678" type="tel"/>
+                </div>
+              </div>
+              <button onclick="saveSettings()" class="btn-primary mt-4 text-sm">บันทึกการเปลี่ยนแปลง</button>
+            </div>
+
+            <div class="card">
+              <h3 class="font-semibold mb-4">การแจ้งเตือน</h3>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-sm font-medium">แจ้งเตือนการนิเทศ</div>
+                    <div class="text-xs text-on-surface-variant">รับการแจ้งเตือนก่อนวันนิเทศ 1 วัน</div>
+                  </div>
+                  <label class="toggle-switch"><input type="checkbox" checked id="notif-supervision"/><span class="toggle-slider"></span></label>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-sm font-medium">แจ้งเตือน PLC</div>
+                    <div class="text-xs text-on-surface-variant">รับการแจ้งเตือนการประชุมกลุ่ม PLC</div>
+                  </div>
+                  <label class="toggle-switch"><input type="checkbox" checked id="notif-plc"/><span class="toggle-slider"></span></label>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-sm font-medium">รายงานสรุปรายสัปดาห์</div>
+                    <div class="text-xs text-on-surface-variant">รับรายงานสรุปทุกวันจันทร์</div>
+                  </div>
+                  <label class="toggle-switch"><input type="checkbox" id="notif-weekly"/><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="font-semibold mb-4">เปลี่ยนรหัสผ่าน</h3>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-sm font-medium mb-1.5">รหัสผ่านปัจจุบัน</label>
+                  <input class="form-input" type="password" placeholder="••••••••" id="old-pass"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1.5">รหัสผ่านใหม่</label>
+                  <input class="form-input" type="password" placeholder="••••••••" id="new-pass"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1.5">ยืนยันรหัสผ่านใหม่</label>
+                  <input class="form-input" type="password" placeholder="••••••••" id="confirm-pass"/>
+                </div>
+                <button onclick="changePassword()" class="btn-primary text-sm">เปลี่ยนรหัสผ่าน</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Forgot Password -->
+<div id="modal-forgot" class="modal-overlay">
+  <div class="modal-box">
+    <h3 class="text-lg font-bold mb-2">ลืมรหัสผ่าน</h3>
+    <p class="text-sm text-on-surface-variant mb-4">กรอกอีเมลของคุณเพื่อรับลิงค์รีเซ็ตรหัสผ่าน</p>
+    <input class="form-input mb-4" type="email" placeholder="อีเมลของคุณ" id="forgot-email"/>
+    <div class="flex gap-3 justify-end">
+      <button onclick="closeModal('modal-forgot')" class="btn-outline text-sm">ยกเลิก</button>
+      <button onclick="resetPassword()" class="btn-primary text-sm">ส่งอีเมล</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Supervision -->
+<div id="modal-new-supervision" class="modal-overlay">
+  <div class="modal-box" style="max-width:560px">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold">บันทึกการนิเทศ</h3>
+      <button onclick="closeModal('modal-new-supervision')" class="text-on-surface-variant hover:text-on-surface">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="space-y-4 max-h-96 overflow-y-auto pr-1">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium mb-1.5">โรงเรียน</label>
+          <select class="form-select" id="sv-school">
+            <option value="">เลือกโรงเรียน...</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5">วันที่นิเทศ</label>
+          <input class="form-input" type="date" id="sv-date"/>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium mb-1.5">กลุ่มสาระ</label>
+          <select class="form-select" id="sv-subject">
+            <option value="ภาษาไทย">ภาษาไทย</option>
+            <option value="คณิตศาสตร์" selected>คณิตศาสตร์</option>
+            <option value="วิทยาศาสตร์">วิทยาศาสตร์</option>
+            <option value="สังคมศึกษา">สังคมศึกษา</option>
+            <option value="ภาษาอังกฤษ">ภาษาอังกฤษ</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5">ครูผู้สอน</label>
+          <input class="form-input" type="text" placeholder="ชื่อ-สกุลครู" id="sv-teacher"/>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium mb-1.5">เวลาเริ่ม</label>
+          <input class="form-input" type="time" value="09:00" id="sv-time-start"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5">เวลาสิ้นสุด</label>
+          <input class="form-input" type="time" value="12:00" id="sv-time-end"/>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1.5">ประเด็นการนิเทศ</label>
+        <div class="grid grid-cols-2 gap-2" id="sv-topics">
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" checked class="accent-primary" value="การจัดการเรียนรู้เชิงรุก"/> การจัดการเรียนรู้เชิงรุก</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="accent-primary" value="การวัดประเมินผล"/> การวัดประเมินผล</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="accent-primary" value="สื่อและนวัตกรรม"/> สื่อและนวัตกรรม</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="accent-primary" value="การบริหารห้องเรียน"/> การบริหารห้องเรียน</label>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1.5">คะแนนภาพรวม</label>
+        <div class="flex gap-2">
+          <button class="score-btn w-10 h-10 rounded-full border-2 border-outline-variant hover:border-primary text-sm font-medium hover:bg-blue-50" onclick="setScore(1, 'modal')">1</button>
+          <button class="score-btn w-10 h-10 rounded-full border-2 border-outline-variant hover:border-primary text-sm font-medium hover:bg-blue-50" onclick="setScore(2, 'modal')">2</button>
+          <button class="score-btn w-10 h-10 rounded-full border-2 border-outline-variant hover:border-primary text-sm font-medium hover:bg-blue-50" onclick="setScore(3, 'modal')">3</button>
+          <button class="score-btn w-10 h-10 rounded-full border-2 border-primary bg-blue-50 text-primary text-sm font-medium" onclick="setScore(4, 'modal')">4</button>
+          <button class="score-btn w-10 h-10 rounded-full border-2 border-outline-variant hover:border-primary text-sm font-medium hover:bg-blue-50" onclick="setScore(5, 'modal')">5</button>
+        </div>
+        <input type="hidden" id="sv-score" value="4"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1.5">บันทึกผลการนิเทศ</label>
+        <textarea class="form-input h-24 resize-none" placeholder="สรุปผลการนิเทศ ข้อเสนอแนะ..." id="sv-note"></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3 justify-end mt-5">
+      <button onclick="closeModal('modal-new-supervision')" class="btn-outline text-sm">ยกเลิก</button>
+      <button onclick="saveSupervision()" class="btn-primary text-sm" id="sv-submit-btn">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add School -->
+<div id="modal-add-school" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold">เพิ่มโรงเรียน</h3>
+      <button onclick="closeModal('modal-add-school')" class="text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1.5">ชื่อโรงเรียน</label>
+        <input class="form-input" type="text" placeholder="ชื่อโรงเรียน" id="school-name"/>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium mb-1.5">อำเภอ</label>
+          <select class="form-select" id="school-district">
+            <option value="เมืองขอนแก่น">เมืองขอนแก่น</option>
+            <option value="บ้านฝาง">บ้านฝาง</option>
+            <option value="พระยืน">พระยืน</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5">จำนวนครู</label>
+          <input class="form-input" type="number" placeholder="0" id="school-teachers" value="10"/>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1.5">ผู้อำนวยการ</label>
+        <input class="form-input" type="text" placeholder="ชื่อ-สกุล ผอ." id="school-director"/>
+      </div>
+    </div>
+    <div class="flex gap-3 justify-end mt-5">
+      <button onclick="closeModal('modal-add-school')" class="btn-outline text-sm">ยกเลิก</button>
+      <button onclick="addSchool()" class="btn-primary text-sm">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Teacher -->
+<div id="modal-add-teacher" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold">เพิ่มข้อมูลครู</h3>
+      <button onclick="closeModal('modal-add-teacher')" class="text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium mb-1.5">ชื่อ-สกุล</label>
+          <input class="form-input" type="text" placeholder="ชื่อ-สกุล" id="teacher-name"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5">โรงเรียน</label>
+          <select class="form-select" id="teacher-school">
+            <option value="">เลือกโรงเรียน...</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium mb-1.5">กลุ่มสาระ</label>
+          <select class="form-select" id="teacher-subject">
+            <option value="ภาษาไทย">ภาษาไทย</option>
+            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+            <option value="วิทยาศาสตร์">วิทยาศาสตร์</option>
+            <option value="สังคมศึกษา">สังคมศึกษา</option>
+            <option value="ภาษาอังกฤษ">ภาษาอังกฤษ</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5">วิทยฐานะ</label>
+          <select class="form-select" id="teacher-rank">
+            <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
+            <option value="ครู">ครู</option>
+            <option value="ชำนาญการ">ชำนาญการ</option>
+            <option value="ชำนาญการพิเศษ">ชำนาญการพิเศษ</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-3 justify-end mt-5">
+      <button onclick="closeModal('modal-add-teacher')" class="btn-outline text-sm">ยกเลิก</button>
+      <button onclick="addTeacher()" class="btn-primary text-sm">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- New PLC -->
+<div id="modal-new-plc" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold">สร้างกลุ่ม PLC</h3>
+      <button onclick="closeModal('modal-new-plc')" class="text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1.5">ชื่อกลุ่ม PLC</label>
+        <input class="form-input" type="text" placeholder="เช่น PLC คณิตศาสตร์ อ.เมือง" id="plc-name"/>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium mb-1.5">กลุ่มสาระ</label>
+          <select class="form-select" id="plc-subject">
+            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+            <option value="ภาษาไทย">ภาษาไทย</option>
+            <option value="วิทยาศาสตร์">วิทยาศาสตร์</option>
+            <option value="สังคมศึกษา">สังคมศึกษา</option>
+            <option value="ภาษาอังกฤษ">ภาษาอังกฤษ</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5">อำเภอ</label>
+          <select class="form-select" id="plc-district">
+            <option value="เมืองขอนแก่น">เมืองขอนแก่น</option>
+            <option value="บ้านฝาง">บ้านฝาง</option>
+            <option value="พระยืน">พระยืน</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1.5">เป้าหมายของกลุ่ม</label>
+        <textarea class="form-input h-20 resize-none" placeholder="ระบุเป้าหมายและประเด็น PLC..." id="plc-goal"></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3 justify-end mt-5">
+      <button onclick="closeModal('modal-new-plc')" class="btn-outline text-sm">ยกเลิก</button>
+      <button onclick="addPLC()" class="btn-primary text-sm">สร้างกลุ่ม</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div id="modal-profile" class="modal-overlay">
+  <div class="modal-box">
+    <div class="text-center mb-4">
+      <div class="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xl mx-auto mb-3">ศ</div>
+      <div class="font-semibold" id="profile-name">นางสาวศุภรัตน์ ใจดี</div>
+      <div class="text-sm text-on-surface-variant" id="profile-role">ศึกษานิเทศก์ชำนาญการพิเศษ</div>
+      <div class="text-sm text-on-surface-variant">สพป.ขอนแก่น เขต 1</div>
+    </div>
+    <div class="space-y-2 text-sm">
+      <div class="flex items-center gap-2 py-2 border-b border-outline-variant/30">
+        <span class="material-symbols-outlined text-on-surface-variant" style="font-size:18px">email</span>
+        <span id="profile-email">suparat@ssp.go.th</span>
+      </div>
+      <div class="flex items-center gap-2 py-2">
+        <span class="material-symbols-outlined text-on-surface-variant" style="font-size:18px">phone</span>
+        <span id="profile-phone">081-234-5678</span>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="showPage('settings');closeModal('modal-profile')" class="btn-outline text-sm flex-1">แก้ไขโปรไฟล์</button>
+      <button onclick="closeModal('modal-profile');doLogout()" class="btn-danger text-sm flex-1">ออกจากระบบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- School Detail Modal -->
+<div id="modal-school-detail" class="modal-overlay">
+  <div class="modal-box" style="max-width:520px">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold" id="modal-school-name">รร.อนุบาลขอนแก่น</h3>
+      <button onclick="closeModal('modal-school-detail')" class="text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div id="modal-school-content" class="space-y-4">
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="closeModal('modal-school-detail');showModal('modal-new-supervision')" class="btn-primary text-sm">บันทึกการนิเทศ</button>
+      <button onclick="closeModal('modal-school-detail')" class="btn-outline text-sm">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface px-5 py-3 rounded-full text-sm font-medium shadow-lg z-[200] transition-all opacity-0 pointer-events-none" style="color:#f0f1f2">
+  ✓ บันทึกเรียบร้อยแล้ว
+</div>
+
+<script>
+// ===== FIREBASE CONFIG =====
+const firebaseConfig = {
+  apiKey: "AIzaSyAwGlwTkCTl6X63qqi1cGNxD3hzvKjqesg",
+  authDomain: "smart-supervision-cdb30.firebaseapp.com",
+  projectId: "smart-supervision-cdb30",
+  storageBucket: "smart-supervision-cdb30.firebasestorage.app",
+  messagingSenderId: "415163845649",
+  appId: "1:415163845649:web:b2a9453818ab94b25835b0",
+  measurementId: "G-PB7QW6LXE3"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// ===== DATA STORE =====
+let appData = {
+  schools: [],
+  teachers: [],
+  supervisions: [],
+  plcs: [],
+  notifications: [],
+  settings: { name: 'นางสาวศุภรัตน์ ใจดี', role: 'ศึกษานิเทศก์ชำนาญการพิเศษ', email: 'suparat@ssp.go.th', phone: '081-234-5678' }
+};
+
+let currentFilter = { schools: { q: '', status: '', district: '' }, teachers: { q: '', subject: '' } };
+let currentUser = null;
+let sidebarOpen = false;
+let supervisionTab = 'all';
+
+// ===== INITIALIZE FIREBASE =====
+function initFirebase() {
+  // Listen for realtime updates
+  database.ref('schools').on('value', (snapshot) => {
+    const val = snapshot.val();
+    appData.schools = val ? Object.keys(val).map(key => ({ ...val[key], id: key })) : [];
+    renderAll();
+  });
+
+  database.ref('teachers').on('value', (snapshot) => {
+    const val = snapshot.val();
+    appData.teachers = val ? Object.keys(val).map(key => ({ ...val[key], id: key })) : [];
+    renderAll();
+  });
+
+  database.ref('supervisions').on('value', (snapshot) => {
+    const val = snapshot.val();
+    appData.supervisions = val ? Object.keys(val).map(key => ({ ...val[key], id: key })) : [];
+    renderAll();
+  });
+
+  database.ref('plcs').on('value', (snapshot) => {
+    const val = snapshot.val();
+    appData.plcs = val ? Object.keys(val).map(key => ({ ...val[key], id: key })) : [];
+    renderAll();
+  });
+
+  database.ref('notifications').on('value', (snapshot) => {
+    const val = snapshot.val();
+    appData.notifications = val ? Object.keys(val).map(key => ({ ...val[key], id: key })) : [];
+    renderAll();
+  });
+
+  database.ref('settings').on('value', (snapshot) => {
+    const val = snapshot.val();
+    if (val) appData.settings = val;
+    renderAll();
+  });
+
+  // Hide loading overlay
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
+// ===== RENDER ALL =====
+function renderAll() {
+  updateDashboardStats();
+  renderSchools(appData.schools);
+  renderSupervisions(appData.supervisions);
+  renderTeachers(appData.teachers);
+  renderPLC(appData.plcs);
+  renderNotifications(appData.notifications);
+  renderCalendar();
+  renderReports();
+  updateSidebarBadges();
+  updateLoginStats();
+  populateSchoolSelects();
+}
+
+// ===== UPDATE DASHBOARD =====
+function updateDashboardStats() {
+  const schools = appData.schools.length;
+  const teachers = appData.teachers.length;
+  const supervisions = appData.supervisions.filter(s => s.status === 'done').length;
+  const scores = appData.supervisions.filter(s => s.score > 0).map(s => s.score);
+  const avg = scores.length ? (scores.reduce((a,b) => a+b, 0) / scores.length) : 0;
+
+  document.getElementById('dash-schools').textContent = schools;
+  document.getElementById('dash-teachers').textContent = teachers;
+  document.getElementById('dash-supervisions').textContent = supervisions;
+  document.getElementById('dash-avg-score').textContent = avg.toFixed(1);
+
+  // Progress bars
+  document.getElementById('dash-schools-bar').style.width = Math.min(100, (schools / 150) * 100) + '%';
+  document.getElementById('dash-teachers-bar').style.width = Math.min(100, (teachers / 1500) * 100) + '%';
+  document.getElementById('dash-supervisions-bar').style.width = Math.min(100, (supervisions / 100) * 100) + '%';
+  document.getElementById('dash-avg-bar').style.width = (avg / 5) * 100 + '%';
+
+  // Recent activities
+  const recent = document.getElementById('recent-activities');
+  const recentData = appData.supervisions.slice(-4).reverse();
+  const icons = ['assignment', 'check_circle', 'schedule', 'upload_file'];
+  const colors = ['text-primary', 'text-green-600', '#e65100', 'text-secondary'];
+  const bgColors = ['bg-blue-50', 'bg-green-50', 'bg-orange-50', 'bg-purple-50'];
+  const labels = ['นิเทศ', 'PLC', 'นัดหมาย', 'อัปโหลด'];
+  
+  recent.innerHTML = recentData.length ? recentData.map((s, i) => `
+    <div class="flex items-start gap-3">
+      <div class="w-8 h-8 rounded-full ${bgColors[i % bgColors.length]} flex items-center justify-center flex-shrink-0 mt-0.5">
+        <span class="material-symbols-outlined ${colors[i % colors.length]}" style="font-size:16px">${icons[i % icons.length]}</span>
+      </div>
+      <div>
+        <p class="text-sm font-medium">${s.school}</p>
+        <p class="text-xs text-on-surface-variant">${s.subject} | ${s.teacher}</p>
+        <p class="text-xs text-on-surface-variant/60 mt-0.5">${s.date || 'ไม่ระบุวันที่'}</p>
+      </div>
+    </div>
+  `).join('') : '<p class="text-sm text-on-surface-variant text-center py-4">ยังไม่มีกิจกรรมล่าสุด</p>';
+
+  // Attention schools
+  const attention = document.getElementById('attention-schools');
+  const attSchools = appData.schools.filter(s => s.status === 'attention').slice(0, 3);
+  attention.innerHTML = attSchools.length ? attSchools.map(s => `
+    <tr class="table-row border-b border-outline-variant/20">
+      <td class="py-3 px-3 font-medium">${s.name}</td>
+      <td class="py-3 px-3 text-on-surface-variant">${s.lastVisit || 'ไม่ระบุ'}</td>
+      <td class="py-3 px-3"><div class="flex items-center gap-1"><span class="text-yellow-500">${'★'.repeat(Math.floor(s.score || 0))}</span><span class="text-gray-200">${'★'.repeat(5 - Math.floor(s.score || 0))}</span><span class="ml-1 font-medium">${(s.score || 0).toFixed(1)}</span></div></td>
+      <td class="py-3 px-3"><span class="badge badge-red">เร่งด่วน</span></td>
+      <td class="py-3 px-3"><button onclick="showModal('modal-new-supervision')" class="text-primary text-xs hover:underline">นิเทศ</button></td>
+    </tr>
+  `).join('') : '<tr><td colspan="5" class="py-4 text-center text-on-surface-variant text-sm">ไม่มีโรงเรียนที่ต้องให้ความสนใจ</td></tr>';
+
+  // Monthly chart
+  const chart = document.getElementById('monthly-chart');
+  const months = ['พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.'];
+  const monthData = appData.supervisions.filter(s => s.status === 'done').reduce((acc, s) => {
+    if (s.month) { acc[s.month] = (acc[s.month] || 0) + 1; }
+    return acc;
+  }, {});
+  const maxVal = Math.max(...Object.values(monthData), 1);
+  chart.innerHTML = months.map(m => {
+    const val = monthData[m] || 0;
+    const pct = (val / maxVal) * 100;
+    return `<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-blue-100 rounded-t-md relative" style="height:100px">
+        <div class="absolute bottom-0 left-0 right-0 bg-primary rounded-t-md chart-bar" style="height:${pct}%"></div>
+      </div>
+      <span class="text-xs text-on-surface-variant">${m}</span>
+      <span class="text-xs font-medium">${val}</span>
+    </div>`;
+  }).join('');
+}
+
+// ===== UPDATE SIDEBAR BADGES =====
+function updateSidebarBadges() {
+  const pending = appData.supervisions.filter(s => s.status === 'pending').length;
+  document.getElementById('pending-count').textContent = pending;
+  document.getElementById('stab-pending-count').textContent = pending;
+  document.getElementById('stab-all-count').textContent = appData.supervisions.length;
+  document.getElementById('stab-done-count').textContent = appData.supervisions.filter(s => s.status === 'done').length;
+  
+  const unread = appData.notifications.filter(n => !n.read).length;
+  const dot = document.getElementById('notif-dot');
+  const sideDot = document.getElementById('notif-sidebar-dot');
+  if (unread > 0) { dot.style.display = 'block'; sideDot.style.display = 'block'; } 
+  else { dot.style.display = 'none'; sideDot.style.display = 'none'; }
+}
+
+// ===== UPDATE LOGIN STATS =====
+function updateLoginStats() {
+  document.getElementById('login-stat-schools').textContent = appData.schools.length;
+  document.getElementById('login-stat-teachers').textContent = appData.teachers.length;
+  const done = appData.supervisions.filter(s => s.status === 'done').length;
+  document.getElementById('login-stat-supervisions').textContent = done;
+  const scores = appData.supervisions.filter(s => s.score > 0).map(s => s.score);
+  const avg = scores.length ? (scores.reduce((a,b) => a+b, 0) / scores.length * 20) : 0;
+  document.getElementById('login-stat-satisfaction').textContent = Math.round(avg) + '%';
+}
+
+// ===== POPULATE SCHOOL SELECTS =====
+function populateSchoolSelects() {
+  const selects = ['sv-school', 'teacher-school'];
+  selects.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">เลือกโรงเรียน...</option>' + 
+      appData.schools.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+    if (current && appData.schools.some(s => s.name === current)) sel.value = current;
+  });
+}
+
+// ===== SCHOOLS =====
+function renderSchools(data) {
+  const grid = document.getElementById('schools-grid');
+  document.getElementById('schools-subtitle').textContent = `สพป.ขอนแก่น เขต 1 | ${data.length} โรงเรียน`;
+  
+  // Update district filter
+  const districtFilter = document.getElementById('school-district-filter');
+  const districts = [...new Set(appData.schools.map(s => s.district).filter(Boolean))];
+  const currentDist = districtFilter.value;
+  districtFilter.innerHTML = '<option value="">ทุกอำเภอ</option>' + 
+    districts.map(d => `<option value="${d}">${d}</option>`).join('');
+  if (currentDist) districtFilter.value = currentDist;
+
+  grid.innerHTML = data.map(s => {
+    const statusBadge = s.status === 'good' ? 'badge-green' : s.status === 'attention' ? 'badge-red' : 'badge-gray';
+    const statusText = s.status === 'good' ? 'ดีมาก' : s.status === 'attention' ? 'ต้องดูแล' : 'ปกติ';
+    const stars = Array(5).fill(0).map((_, i) => `<span class="${i < Math.floor(s.score || 0) ? 'text-yellow-400' : 'text-gray-200'}" style="font-size:14px">★</span>`).join('');
+    return `<div class="card hover:shadow-md transition-shadow cursor-pointer" onclick="openSchoolDetail('${s.id}')">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1;font-size:20px">school</span>
+        </div>
+        <span class="badge ${statusBadge} text-xs">${statusText}</span>
+      </div>
+      <h4 class="font-semibold text-sm mb-1 leading-tight">${s.name}</h4>
+      <p class="text-xs text-on-surface-variant mb-3">อ.${s.district || 'ไม่ระบุ'} | ครู ${s.teachers || 0} คน</p>
+      <div class="flex items-center gap-1 mb-2">${stars}<span class="text-xs text-on-surface-variant ml-1">${(s.score || 0).toFixed(1)}</span></div>
+      <div class="text-xs text-on-surface-variant">นิเทศล่าสุด: ${s.lastVisit || 'ไม่ระบุ'}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterSchools(q) {
+  const filtered = appData.schools.filter(s => 
+    s.name.includes(q) || (s.district && s.district.includes(q))
+  );
+  renderSchools(filtered);
+}
+
+function filterSchoolsStatus(status) {
+  const filtered = status ? appData.schools.filter(s => s.status === status) : appData.schools;
+  renderSchools(filtered);
+}
+
+function filterSchoolsDistrict(district) {
+  const filtered = district ? appData.schools.filter(s => s.district === district) : appData.schools;
+  renderSchools(filtered);
+}
+
+function openSchoolDetail(id) {
+  const s = appData.schools.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('modal-school-name').textContent = s.name;
+  document.getElementById('modal-school-content').innerHTML = `
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-surface-container-low rounded-xl p-3 text-center">
+        <div class="text-2xl font-bold text-primary">${s.teachers || 0}</div>
+        <div class="text-xs text-on-surface-variant">ครูทั้งหมด</div>
+      </div>
+      <div class="bg-surface-container-low rounded-xl p-3 text-center">
+        <div class="text-2xl font-bold text-tertiary">${(s.score || 0).toFixed(1)}</div>
+        <div class="text-xs text-on-surface-variant">คะแนนเฉลี่ย</div>
+      </div>
+    </div>
+    <div class="text-sm space-y-2">
+      <div class="flex justify-between"><span class="text-on-surface-variant">ผู้อำนวยการ:</span><span class="font-medium">${s.director || 'ไม่ระบุ'}</span></div>
+      <div class="flex justify-between"><span class="text-on-surface-variant">อำเภอ:</span><span>${s.district || 'ไม่ระบุ'}</span></div>
+      <div class="flex justify-between"><span class="text-on-surface-variant">นิเทศล่าสุด:</span><span>${s.lastVisit || 'ไม่ระบุ'}</span></div>
+    </div>
+  `;
+  showModal('modal-school-detail');
+}
+
+function addSchool() {
+  const name = document.getElementById('school-name').value.trim();
+  const district = document.getElementById('school-district').value;
+  const teachers = parseInt(document.getElementById('school-teachers').value) || 0;
+  const director = document.getElementById('school-director').value.trim();
+  
+  if (!name) { showToast('กรุณากรอกชื่อโรงเรียน'); return; }
+  
+  const newSchool = {
+    name,
+    district,
+    teachers,
+    director: director || 'ไม่ระบุ',
+    score: 0,
+    status: 'normal',
+    lastVisit: 'ไม่ระบุ',
+    createdAt: new Date().toISOString()
+  };
+  
+  database.ref('schools').push(newSchool).then(() => {
+    closeModal('modal-add-school');
+    showToast('เพิ่มโรงเรียนเรียบร้อยแล้ว ✓');
+    document.getElementById('school-name').value = '';
+    document.getElementById('school-director').value = '';
+  }).catch(() => showToast('เกิดข้อผิดพลาด กรุณาลองใหม่'));
+}
+
+// ===== SUPERVISIONS =====
+function renderSupervisions(data) {
+  const list = document.getElementById('supervision-list');
+  const filtered = data.filter(s => {
+    if (supervisionTab === 'all') return true;
+    if (supervisionTab === 'pending') return s.status === 'pending';
+    if (supervisionTab === 'done') return s.status === 'done';
+    return true;
+  });
+  
+  list.innerHTML = filtered.map(sv => {
+    const stars = sv.score > 0 ? Array(5).fill(0).map((_, i) => `<span class="${i < sv.score ? 'text-yellow-400' : 'text-gray-200'}">★</span>`).join('') : '';
+    const badge = sv.status === 'done' ? '<span class="badge badge-green">เสร็จสิ้น</span>' : '<span class="badge badge-orange">รอดำเนินการ</span>';
+    return `<div class="card hover:shadow-md transition-shadow">
+      <div class="flex items-start justify-between">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl ${sv.status === 'done' ? 'bg-green-50' : 'bg-orange-50'} flex items-center justify-center flex-shrink-0">
+            <span class="material-symbols-outlined ${sv.status === 'done' ? 'text-green-600' : ''}" style="font-size:20px;color:${sv.status !== 'done' ? '#e65100' : ''}">${sv.status === 'done' ? 'check_circle' : 'schedule'}</span>
+          </div>
+          <div>
+            <div class="font-medium text-sm">${sv.school}</div>
+            <div class="text-xs text-on-surface-variant mt-0.5">${sv.date || 'ไม่ระบุ'} | ${sv.subject || 'ไม่ระบุ'} | ${sv.teacher || 'ไม่ระบุ'}</div>
+            ${sv.score > 0 ? `<div class="flex items-center gap-1 mt-1">${stars}</div>` : ''}
+            ${sv.note ? `<div class="text-xs text-on-surface-variant mt-1">${sv.note}</div>` : ''}
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          ${badge}
+          ${sv.status === 'pending' ? `<button onclick="showModal('modal-new-supervision')" class="text-primary"><span class="material-symbols-outlined" style="font-size:20px">edit</span></button>` : ''}
+          <button onclick="deleteSupervision('${sv.id}')" class="text-error"><span class="material-symbols-outlined" style="font-size:20px">delete</span></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function switchSupervisionTab(tab) {
+  supervisionTab = tab;
+  ['all','pending','done'].forEach(t => document.getElementById('stab-'+t).classList.toggle('active', t===tab));
+  renderSupervisions(appData.supervisions);
+}
+
+function saveSupervision() {
+  const school = document.getElementById('sv-school').value;
+  const date = document.getElementById('sv-date').value;
+  const subject = document.getElementById('sv-subject').value;
+  const teacher = document.getElementById('sv-teacher').value.trim();
+  const score = parseInt(document.getElementById('sv-score').value) || 0;
+  const note = document.getElementById('sv-note').value.trim();
+  const timeStart = document.getElementById('sv-time-start').value;
+  const timeEnd = document.getElementById('sv-time-end').value;
+  
+  // Get selected topics
+  const topics = [];
+  document.querySelectorAll('#sv-topics input:checked').forEach(el => topics.push(el.value));
+  
+  if (!school) { showToast('กรุณาเลือกโรงเรียน'); return; }
+  if (!teacher) { showToast('กรุณากรอกชื่อครูผู้สอน'); return; }
+  
+  const month = date ? new Date(date).toLocaleString('th', { month: 'short' }) : '';
+  
+  const newSV = {
+    school,
+    date: date ? new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : 'ไม่ระบุ',
+    month,
+    subject,
+    teacher,
+    score,
+    note,
+    timeStart,
+    timeEnd,
+    topics,
+    status: score > 0 ? 'done' : 'pending',
+    createdAt: new Date().toISOString()
+  };
+  
+  document.getElementById('sv-submit-btn').disabled = true;
+  document.getElementById('sv-submit-btn').textContent = 'กำลังบันทึก...';
+  
+  database.ref('supervisions').push(newSV).then(() => {
+    closeModal('modal-new-supervision');
+    showToast('บันทึกการนิเทศเรียบร้อยแล้ว ✓');
+    // Reset form
+    document.getElementById('sv-teacher').value = '';
+    document.getElementById('sv-note').value = '';
+    document.getElementById('sv-score').value = '4';
+    setScore(4, 'modal');
+    document.getElementById('sv-submit-btn').disabled = false;
+    document.getElementById('sv-submit-btn').textContent = 'บันทึก';
+  }).catch(() => {
+    showToast('เกิดข้อผิดพลาด กรุณาลองใหม่');
+    document.getElementById('sv-submit-btn').disabled = false;
+    document.getElementById('sv-submit-btn').textContent = 'บันทึก';
+  });
+}
+
+function deleteSupervision(id) {
+  if (!confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) return;
+  database.ref('supervisions/' + id).remove().then(() => {
+    showToast('ลบรายการเรียบร้อยแล้ว');
+  }).catch(() => showToast('เกิดข้อผิดพลาด'));
+}
+
+// ===== TEACHERS =====
+function renderTeachers(data) {
+  const tbody = document.getElementById('teachers-table');
+  document.getElementById('teachers-subtitle').textContent = `ครูทั้งหมด ${data.length} คน ใน ${appData.schools.length} โรงเรียน`;
+  
+  const filtered = data.filter(t => {
+    if (currentFilter.teachers.subject && t.subject !== currentFilter.teachers.subject) return false;
+    if (currentFilter.teachers.q && !t.name.includes(currentFilter.teachers.q) && !t.school.includes(currentFilter.teachers.q)) return false;
+    return true;
+  });
+  
+  tbody.innerHTML = filtered.map(t => {
+    const statusBadge = t.status === 'active' ? '<span class="badge badge-green">ปฏิบัติงาน</span>' : '<span class="badge badge-gray">ลางาน</span>';
+    return `<tr class="table-row border-b border-outline-variant/20">
+      <td class="py-3 px-4">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">${t.name.charAt(0)}</div>
+          <span class="font-medium">${t.name}</span>
+        </div>
+      </td>
+      <td class="py-3 px-4 text-on-surface-variant">${t.school}</td>
+      <td class="py-3 px-4"><span class="badge badge-blue">${t.subject || 'ไม่ระบุ'}</span></td>
+      <td class="py-3 px-4 text-on-surface-variant">${t.rank || 'ไม่ระบุ'}</td>
+      <td class="py-3 px-4">${statusBadge}</td>
+      <td class="py-3 px-4">
+        <button onclick="deleteTeacher('${t.id}')" class="text-error text-xs hover:underline">ลบ</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTeachers(q) {
+  currentFilter.teachers.q = q;
+  renderTeachers(appData.teachers);
+}
+
+function filterTeachersSubject(subject) {
+  currentFilter.teachers.subject = subject;
+  renderTeachers(appData.teachers);
+}
+
+function addTeacher() {
+  const name = document.getElementById('teacher-name').value.trim();
+  const school = document.getElementById('teacher-school').value;
+  const subject = document.getElementById('teacher-subject').value;
+  const rank = document.getElementById('teacher-rank').value;
+  
+  if (!name) { showToast('กรุณากรอกชื่อ-สกุลครู'); return; }
+  if (!school) { showToast('กรุณาเลือกโรงเรียน'); return; }
+  
+  const newTeacher = {
+    name,
+    school,
+    subject,
+    rank,
+    status: 'active',
+    createdAt: new Date().toISOString()
+  };
+  
+  database.ref('teachers').push(newTeacher).then(() => {
+    closeModal('modal-add-teacher');
+    showToast('เพิ่มครูเรียบร้อยแล้ว ✓');
+    document.getElementById('teacher-name').value = '';
+  }).catch(() => showToast('เกิดข้อผิดพลาด กรุณาลองใหม่'));
+}
+
+function deleteTeacher(id) {
+  if (!confirm('คุณต้องการลบครูคนนี้ใช่หรือไม่?')) return;
+  database.ref('teachers/' + id).remove().then(() => {
+    showToast('ลบครูเรียบร้อยแล้ว');
+  }).catch(() => showToast('เกิดข้อผิดพลาด'));
+}
+
+// ===== PLC =====
+function renderPLC(data) {
+  const container = document.getElementById('plc-list');
+  document.getElementById('plc-total').textContent = data.length;
+  document.getElementById('plc-members').textContent = data.reduce((sum, p) => sum + (p.members || 0), 0);
+  document.getElementById('plc-sessions').textContent = data.reduce((sum, p) => sum + (p.sessions || 0), 0);
+  
+  container.innerHTML = data.map(g => {
+    const phaseColor = { Planning:'badge-blue', Action:'badge-orange', Learning:'badge-green', Sharing:'badge-gray' };
+    const colors = { Planning:'#005bbf', Action:'#e65100', Learning:'#1e7e34', Sharing:'#5f6368' };
+    const phase = g.phase || 'Planning';
+    return `<div class="card hover:shadow-md transition-shadow cursor-pointer" onclick="showToast('เปิดรายละเอียด ${g.name}...')">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:${colors[phase]}20">
+          <span class="material-symbols-outlined" style="font-size:20px;color:${colors[phase]}">groups</span>
+        </div>
+        <span class="badge ${phaseColor[phase] || 'badge-gray'} text-xs">${phase}</span>
+      </div>
+      <h4 class="font-semibold text-sm mb-1">${g.name}</h4>
+      <p class="text-xs text-on-surface-variant mb-3">${g.subject || 'ไม่ระบุ'} | อ.${g.district || 'ไม่ระบุ'}</p>
+      <div class="grid grid-cols-2 gap-2 text-center">
+        <div class="bg-surface-container-low rounded-lg py-2">
+          <div class="font-bold text-on-surface">${g.members || 0}</div>
+          <div class="text-xs text-on-surface-variant">สมาชิก</div>
+        </div>
+        <div class="bg-surface-container-low rounded-lg py-2">
+          <div class="font-bold text-on-surface">${g.sessions || 0}</div>
+          <div class="text-xs text-on-surface-variant">ครั้งประชุม</div>
+        </div>
+      </div>
+      <button onclick="deletePLC('${g.id}')" class="mt-3 text-error text-xs hover:underline">ลบกลุ่ม</button>
+    </div>`;
+  }).join('');
+}
+
+function addPLC() {
+  const name = document.getElementById('plc-name').value.trim();
+  const subject = document.getElementById('plc-subject').value;
+  const district = document.getElementById('plc-district').value;
+  const goal = document.getElementById('plc-goal').value.trim();
+  
+  if (!name) { showToast('กรุณากรอกชื่อกลุ่ม PLC'); return; }
+  
+  const newPLC = {
+    name,
+    subject,
+    district,
+    goal: goal || 'ไม่ระบุ',
+    members: 0,
+    sessions: 0,
+    phase: 'Planning',
+    createdAt: new Date().toISOString()
+  };
+  
+  database.ref('plcs').push(newPLC).then(() => {
+    closeModal('modal-new-plc');
+    showToast('สร้างกลุ่ม PLC เรียบร้อยแล้ว ✓');
+    document.getElementById('plc-name').value = '';
+    document.getElementById('plc-goal').value = '';
+  }).catch(() => showToast('เกิดข้อผิดพลาด กรุณาลองใหม่'));
+}
+
+function deletePLC(id) {
+  if (!confirm('คุณต้องการลบกลุ่ม PLC นี้ใช่หรือไม่?')) return;
+  database.ref('plcs/' + id).remove().then(() => {
+    showToast('ลบกลุ่ม PLC เรียบร้อยแล้ว');
+  }).catch(() => showToast('เกิดข้อผิดพลาด'));
+}
+
+// ===== NOTIFICATIONS =====
+function renderNotifications(data) {
+  const list = document.getElementById('notifications-list');
+  const unread = data.filter(n => !n.read);
+  list.innerHTML = data.map(n => `
+    <div class="card ${!n.read ? 'border-l-4 border-l-primary' : ''} hover:shadow-sm transition-shadow" id="notif-${n.id}">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl ${n.bg || 'bg-blue-50'} flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined ${n.color || 'text-primary'}" style="font-variation-settings:'FILL' 1;font-size:20px">${n.icon || 'notifications'}</span>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <div class="font-medium text-sm ${!n.read ? '' : 'text-on-surface-variant'}">${n.title}</div>
+            ${!n.read ? '<span class="w-2 h-2 rounded-full bg-primary flex-shrink-0"></span>' : ''}
+          </div>
+          <div class="text-sm text-on-surface-variant mt-0.5">${n.body}</div>
+          <div class="text-xs text-on-surface-variant/60 mt-1">${n.time || 'ไม่ระบุ'}</div>
+          ${!n.read ? `<button onclick="markNotifRead('${n.id}')" class="text-xs text-primary hover:underline mt-1">ทำเครื่องหมายว่าอ่านแล้ว</button>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function markNotifRead(id) {
+  database.ref('notifications/' + id + '/read').set(true).then(() => {
+    showToast('ทำเครื่องหมายว่าอ่านแล้ว');
+  });
+}
+
+function markAllRead() {
+  const updates = {};
+  appData.notifications.forEach(n => { if (!n.read) updates[n.id + '/read'] = true; });
+  if (Object.keys(updates).length === 0) { showToast('ไม่มีรายการที่ยังไม่ได้อ่าน'); return; }
+  database.ref('notifications').update(updates).then(() => {
+    showToast('ทำเครื่องหมายทั้งหมดว่าอ่านแล้ว ✓');
+  });
+}
+
+// ===== REPORTS =====
+function renderReports() {
+  // Subject scores
+  const subjects = ['ภาษาไทย', 'คณิตศาสตร์', 'วิทยาศาสตร์', 'สังคมศึกษา', 'ภาษาอังกฤษ'];
+  const subjectScores = subjects.map(sub => {
+    const svs = appData.supervisions.filter(s => s.subject === sub && s.score > 0);
+    const avg = svs.length ? svs.reduce((a,b) => a+b.score, 0) / svs.length : 0;
+    return { subject: sub, avg, count: svs.length };
+  });
+  
+  const container = document.getElementById('subject-scores');
+  container.innerHTML = subjectScores.map(s => `
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-on-surface-variant w-28">${s.subject}</span>
+      <div class="progress-bar flex-1"><div class="progress-fill" style="width:${(s.avg/5)*100}%;background:${['#1a73e8','#5b00df','#006872','#e65100','#1e7e34'][subjects.indexOf(s.subject)]}"></div></div>
+      <span class="text-sm font-medium w-8">${s.avg.toFixed(1)}</span>
+    </div>
+  `).join('');
+  
+  // Score distribution
+  const dist = { excellent: 0, good: 0, fair: 0, poor: 0 };
+  appData.supervisions.filter(s => s.score > 0).forEach(s => {
+    if (s.score >= 4.5) dist.excellent++;
+    else if (s.score >= 3.5) dist.good++;
+    else if (s.score >= 2.5) dist.fair++;
+    else dist.poor++;
+  });
+  const total = Object.values(dist).reduce((a,b) => a+b, 0) || 1;
+  
+  document.getElementById('score-distribution').innerHTML = `
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-green-500"></div><span class="text-sm">ดีมาก (4.5-5.0)</span></div>
+      <div class="flex items-center gap-2"><span class="font-medium">${dist.excellent}</span><span class="text-on-surface-variant text-xs">${Math.round(dist.excellent/total*100)}%</span></div>
+    </div>
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-blue-500"></div><span class="text-sm">ดี (3.5-4.4)</span></div>
+      <div class="flex items-center gap-2"><span class="font-medium">${dist.good}</span><span class="text-on-surface-variant text-xs">${Math.round(dist.good/total*100)}%</span></div>
+    </div>
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-yellow-500"></div><span class="text-sm">พอใช้ (2.5-3.4)</span></div>
+      <div class="flex items-center gap-2"><span class="font-medium">${dist.fair}</span><span class="text-on-surface-variant text-xs">${Math.round(dist.fair/total*100)}%</span></div>
+    </div>
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-500"></div><span class="text-sm">ต้องปรับปรุง</span></div>
+      <div class="flex items-center gap-2"><span class="font-medium">${dist.poor}</span><span class="text-on-surface-variant text-xs">${Math.round(dist.poor/total*100)}%</span></div>
+    </div>
+  `;
+  
+  // Donut chart
+  const totalScore = appData.supervisions.filter(s => s.score > 0).reduce((a,b) => a+b.score, 0);
+  const avgScore = totalScore / (appData.supervisions.filter(s => s.score > 0).length || 1);
+  document.getElementById('donut-score').textContent = avgScore.toFixed(1);
+  
+  const donutBlue = document.getElementById('donut-blue');
+  const donutPurple = document.getElementById('donut-purple');
+  const donutYellow = document.getElementById('donut-yellow');
+  const circumference = 2 * Math.PI * 40;
+  
+  const excellentPct = dist.excellent / total;
+  const goodPct = dist.good / total;
+  const fairPct = dist.fair / total;
+  
+  donutBlue.setAttribute('stroke-dasharray', `${excellentPct * circumference} ${circumference}`);
+  donutBlue.setAttribute('stroke-dashoffset', '0');
+  donutPurple.setAttribute('stroke-dasharray', `${goodPct * circumference} ${circumference}`);
+  donutPurple.setAttribute('stroke-dashoffset', `${-excellentPct * circumference}`);
+  donutYellow.setAttribute('stroke-dasharray', `${fairPct * circumference} ${circumference}`);
+  donutYellow.setAttribute('stroke-dashoffset', `${-(excellentPct + goodPct) * circumference}`);
+  
+  // Recent reports
+  const reports = appData.supervisions.filter(s => s.status === 'done').slice(0, 3);
+  const reportContainer = document.getElementById('recent-reports');
+  reportContainer.innerHTML = reports.map(s => `
+    <div class="flex items-center gap-4 p-3 bg-surface-container-low rounded-xl">
+      <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+        <span class="material-symbols-outlined text-primary" style="font-size:20px">description</span>
+      </div>
+      <div class="flex-1">
+        <div class="font-medium text-sm">${s.school}</div>
+        <div class="text-xs text-on-surface-variant">${s.subject} | คะแนน ${s.score}/5</div>
+      </div>
+      <button onclick="showToast('กำลังดาวน์โหลด...')" class="text-primary"><span class="material-symbols-outlined" style="font-size:20px">download</span></button>
+    </div>
+  `).join('');
+}
+
+function generateReport() {
+  showToast('กำลังสร้างรายงาน PDF...');
+  setTimeout(() => showToast('ดาวน์โหลดรายงานเรียบร้อยแล้ว 📄'), 2000);
+}
+
+// ===== CALENDAR =====
+function renderCalendar() {
+  const grid = document.getElementById('calendar-grid');
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  
+  document.getElementById('schedule-month').textContent = new Date(year, month).toLocaleString('th', { month: 'long', year: 'numeric' });
+  
+  // Get supervision dates
+  const svDates = appData.supervisions.map(s => {
+    if (s.date) {
+      const parts = s.date.split(' ');
+      const day = parseInt(parts[0]);
+      return day;
+    }
+    return null;
+  }).filter(d => d !== null && !isNaN(d));
+  
+  let cells = '';
+  for (let i = 0; i < firstDay; i++) cells += '<div></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const today = (d === now.getDate() && month === now.getMonth() && year === now.getFullYear());
+    const hasSup = svDates.includes(d);
+    cells += `<div class="aspect-square flex flex-col items-center justify-center rounded-lg text-sm cursor-pointer hover:bg-surface-container-low relative
+      ${today ? 'bg-primary text-white font-bold' : ''}" onclick="${hasSup ? "showToast('วันที่ "+d+" - มีการนิเทศ')" : ''}">
+      ${d}
+      ${hasSup && !today ? '<div class="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-primary"></div>' : ''}
+      ${hasSup && today ? '<div class="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-white"></div>' : ''}
+    </div>`;
+  }
+  grid.innerHTML = cells;
+}
+
+// ===== CALENDAR EVENTS =====
+function renderUpcomingEvents() {
+  const container = document.getElementById('upcoming-events');
+  const pending = appData.supervisions.filter(s => s.status === 'pending');
+  container.innerHTML = pending.length ? pending.map(s => `
+    <div class="card border-l-4 border-l-primary">
+      <div class="flex items-start justify-between">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary" style="font-size:20px">event</span>
+          </div>
+          <div>
+            <div class="font-medium">${s.school}</div>
+            <div class="text-sm text-on-surface-variant mt-0.5">${s.date || 'ไม่ระบุ'} | ${s.subject}</div>
+            <div class="text-sm text-on-surface-variant">ครูผู้สอน: ${s.teacher}</div>
+          </div>
+        </div>
+        <span class="badge badge-orange">รอดำเนินการ</span>
+      </div>
+    </div>
+  `).join('') : '<p class="text-sm text-on-surface-variant text-center py-4">ไม่มีการนัดหมายที่กำลังจะถึง</p>';
+}
+
+// ===== SETTINGS =====
+function saveSettings() {
+  const settings = {
+    name: document.getElementById('settings-fullname').value,
+    role: document.getElementById('settings-position').value,
+    email: document.getElementById('settings-email').value,
+    phone: document.getElementById('settings-phone').value
+  };
+  
+  database.ref('settings').set(settings).then(() => {
+    showToast('บันทึกข้อมูลเรียบร้อยแล้ว ✓');
+    document.getElementById('sidebar-name').textContent = settings.name;
+    document.getElementById('header-name').textContent = settings.name.split(' ').pop();
+    document.getElementById('settings-name').textContent = settings.name;
+    document.getElementById('settings-role').textContent = settings.role;
+    document.getElementById('profile-name').textContent = settings.name;
+    document.getElementById('profile-role').textContent = settings.role;
+    document.getElementById('profile-email').textContent = settings.email;
+    document.getElementById('profile-phone').textContent = settings.phone;
+  }).catch(() => showToast('เกิดข้อผิดพลาด กรุณาลองใหม่'));
+}
+
+function changePassword() {
+  const oldPass = document.getElementById('old-pass').value;
+  const newPass = document.getElementById('new-pass').value;
+  const confirmPass = document.getElementById('confirm-pass').value;
+  
+  if (!oldPass || !newPass || !confirmPass) {
+    showToast('กรุณากรอกรหัสผ่านให้ครบถ้วน');
+    return;
+  }
+  if (newPass !== confirmPass) {
+    showToast('รหัสผ่านใหม่ไม่ตรงกัน');
+    return;
+  }
+  if (newPass.length < 6) {
+    showToast('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+    return;
+  }
+  
+  showToast('เปลี่ยนรหัสผ่านเรียบร้อยแล้ว ✓');
+  document.getElementById('old-pass').value = '';
+  document.getElementById('new-pass').value = '';
+  document.getElementById('confirm-pass').value = '';
+}
+
+function resetPassword() {
+  const email = document.getElementById('forgot-email').value;
+  if (!email) { showToast('กรุณากรอกอีเมล'); return; }
+  closeModal('modal-forgot');
+  showToast('ส่งลิงค์รีเซ็ตรหัสผ่านไปยังอีเมลของคุณแล้ว ✓');
+}
+
+// ===== GLOBAL SEARCH =====
+function globalSearch(q) {
+  if (!q) { showPage('dashboard'); return; }
+  const schools = appData.schools.filter(s => s.name.includes(q) || (s.district && s.district.includes(q)));
+  const teachers = appData.teachers.filter(t => t.name.includes(q) || t.school.includes(q));
+  if (schools.length > 0) { showPage('schools'); filterSchools(q); }
+  else if (teachers.length > 0) { showPage('teachers'); filterTeachers(q); }
+  else showToast('ไม่พบผลลัพธ์');
+}
+
+// ===== SCORE BUTTON =====
+function setScore(s, context = 'modal') {
+  const container = context === 'modal' ? 
+    document.querySelector('#modal-new-supervision .flex.gap-2') : 
+    document.querySelector('#modal-edit-supervision .flex.gap-2');
+  if (!container) return;
+  container.querySelectorAll('.score-btn').forEach((b, i) => {
+    if (i < s) {
+      b.className = 'score-btn w-10 h-10 rounded-full border-2 border-primary bg-blue-50 text-primary text-sm font-medium';
+    } else {
+      b.className = 'score-btn w-10 h-10 rounded-full border-2 border-outline-variant hover:border-primary text-sm font-medium hover:bg-blue-50';
+    }
+  });
+  document.getElementById('sv-score').value = s;
+}
+
+// ===== AUTH =====
+function doLogin() {
+  const u = document.getElementById('login-user').value;
+  const p = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const spinner = document.getElementById('login-spinner');
+  
+  errEl.classList.add('hidden');
+  spinner.classList.remove('hidden');
+  
+  // Simple auth with Firebase
+  setTimeout(() => {
+    spinner.classList.add('hidden');
+    if ((u === 'supervisor' && p === '1234') || (u === 'admin' && p === 'admin')) {
+      currentUser = { name: u === 'admin' ? 'ผู้ดูแลระบบ' : 'นางสาวศุภรัตน์ ใจดี', role: u === 'admin' ? 'ผู้ดูแลระบบ' : 'ศึกษานิเทศก์ชำนาญการพิเศษ' };
+      document.getElementById('header-name').textContent = u === 'admin' ? 'แอดมิน' : 'ศุภรัตน์';
+      document.getElementById('sidebar-name').textContent = currentUser.name;
+      document.getElementById('sidebar-role').textContent = currentUser.role;
+      document.getElementById('settings-name').textContent = currentUser.name;
+      document.getElementById('settings-role').textContent = currentUser.role;
+      document.getElementById('profile-name').textContent = currentUser.name;
+      document.getElementById('profile-role').textContent = currentUser.role;
+      gotoApp();
+    } else {
+      errEl.classList.remove('hidden');
+    }
+  }, 800);
+}
+
+function gotoApp() {
+  document.getElementById('page-login').classList.remove('active');
+  document.getElementById('page-app').classList.add('active');
+  initFirebase();
+  initApp();
+}
+
+function doLogout() {
+  document.getElementById('page-app').classList.remove('active');
+  document.getElementById('page-login').classList.add('active');
+  // Reset data
+  appData = { schools: [], teachers: [], supervisions: [], plcs: [], notifications: [], settings: {} };
+}
+
+function togglePassword() {
+  const input = document.getElementById('login-pass');
+  const icon = document.getElementById('pass-icon');
+  if (input.type === 'password') { input.type = 'text'; icon.textContent = 'visibility'; }
+  else { input.type = 'password'; icon.textContent = 'visibility_off'; }
+}
+
+// ===== APP INIT =====
+function initApp() {
+  showPage('dashboard');
+}
+
+// ===== NAVIGATION =====
+function showPage(page) {
+  document.querySelectorAll('[id^="sec-"]').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.sidebar-link').forEach(l => {
+    l.classList.remove('active');
+    l.querySelector('.mat-icon')?.classList.remove('text-primary');
+  });
+  const sec = document.getElementById('sec-' + page);
+  if (sec) { sec.classList.remove('hidden'); sec.classList.add('fade-in'); }
+  const nav = document.getElementById('nav-' + page);
+  if (nav) { nav.classList.add('active'); }
+  // Update calendar events when showing schedule
+  if (page === 'schedule') renderUpcomingEvents();
+  if (page === 'reports') renderReports();
+}
+
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  sidebarOpen = !sidebarOpen;
+  if (sidebarOpen) {
+    sb.style.transform = 'translateX(0)';
+    ov.classList.remove('hidden');
+  } else { closeSidebar(); }
+}
+
+function closeSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  sidebarOpen = false;
+  sb.style.transform = '';
+  ov.classList.add('hidden');
+}
+
+// ===== MODALS =====
+function showModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'modal-new-supervision') {
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('sv-date').value = today;
+    populateSchoolSelects();
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('open');
+  }
+});
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(8px)';
+  }, 2800);
+}
+
+// ===== KEYBOARD SHORTCUTS =====
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('page-login').classList.contains('active')) {
+    doLogin();
+  }
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+// Show login page initially
+document.querySelectorAll('[data-page]').forEach(p => {
+  if (p.id !== 'page-login') p.classList.remove('active');
+});
+
+// Auto-login for demo (optional)
+// Uncomment below to auto-login
+// setTimeout(doLogin, 500);
+</script>
+</body>
+</html>
